@@ -342,3 +342,41 @@ function exportarCSV() {
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('service-worker.js'); });
 }
+
+// === AREA DA GESTÃO (AUDITORIA) ===
+
+function abrirAreaGestor() {
+    const modal = document.getElementById('modal-gestor');
+    const login = document.getElementById('login-form');
+    const painel = document.getElementById('painel-gestor');
+    
+    modal.classList.remove('hidden');
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+    
+    // Reset
+    login.style.display = 'block';
+    painel.style.display = 'none';
+    document.getElementById('input-senha-gestor').value = '';
+}
+
+function fecharModalGestor() {
+    const modal = document.getElementById('modal-gestor');
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.visibility = 'hidden';
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function verificarSenhaGestor() {
+    const senha = document.getElementById('input-senha-gestor').value;
+    // Senha simples para demo
+    if (senha === 'admin') {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('painel-gestor').style.display = 'block';
+        document.getElementById('total-registros').innerText = dbManifestacoes.length;
+    } else {
+        alert('Senha incorreta! Tente "admin"');
+    }
+}
