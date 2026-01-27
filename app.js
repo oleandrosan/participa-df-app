@@ -20,6 +20,86 @@ let gpsAtual = ""; // Guarda o GPS detectado
 // Banco de Dados Local (Memória)
 let dbManifestacoes = [];
 
+// === PERSISTÊNCIA DE ESTADO (AUTOSAVE) ===
+// Salva dados no LocalStorage para evitar perda se o app recarregar (ex: ao voltar da câmera)
+function salvarEstadoTemp() {
+    const dados = {
+        nome: document.getElementById('input-nome').value,
+        cpf: document.getElementById('input-cpf').value,
+        tel: document.getElementById('input-tel').value,
+        email: document.getElementById('input-email').value,
+        cep: document.getElementById('input-cep-res').value,
+        endRes: document.getElementById('input-end-res').value,
+        numRes: document.getElementById('input-num-res').value,
+        titulo: document.getElementById('input-titulo').value,
+        endOcorrencia: document.getElementById('input-end-ocorrencia').value,
+        texto: document.getElementById('texto-relato').value,
+        gps: gpsAtual,
+        timestamp: Date.now()
+    };
+    localStorage.setItem('participa_df_temp_v2', JSON.stringify(dados));
+}
+
+function restaurarEstadoTemp() {
+    const salvo = localStorage.getItem('participa_df_temp_v2');
+    if (!salvo) return;
+
+    try {
+        const dados = JSON.parse(salvo);
+        // Só restaura se foi salvo há menos de 24h
+        if (Date.now() - dados.timestamp > 24 * 60 * 60 * 1000) return;
+
+        console.log("Restaurando estado anterior...");
+        document.getElementById('input-nome').value = dados.nome || '';
+        document.getElementById('input-cpf').value = dados.cpf || '';
+        document.getElementById('input-tel').value = dados.tel || '';
+        document.getElementById('input-email').value = dados.email || '';
+        document.getElementById('input-cep-res').value = dados.cep || '';
+        document.getElementById('input-end-res').value = dados.endRes || '';
+        document.getElementById('input-num-res').value = dados.numRes || '';
+        document.getElementById('input-titulo').value = dados.titulo || '';
+        document.getElementById('input-end-ocorrencia').value = dados.endOcorrencia || '';
+        document.getElementById('texto-relato').value = dados.texto || '';
+
+        if (dados.gps) {
+            gpsAtual = dados.gps;
+            document.getElementById('gps-status').style.display = 'block';
+            document.getElementById('gps-status').innerText = "📍 Localização restaurada";
+        }
+
+        // Se tinha algo preenchido, abre o modal automaticamente para o usuário continuar
+        if (dados.titulo || dados.texto || dados.nome) {
+            openModal();
+            // Pequeno aviso visual
+            const aviso = document.createElement('div');
+            aviso.innerText = "🔄 Seus dados foram restaurados";
+            aviso.style.cssText = "background:#E6FFFA; color:#2C7A7B; padding:10px; margin-bottom:10px; border-radius:8px; text-align:center;";
+            document.querySelector('.modal-body').prepend(aviso);
+            setTimeout(() => aviso.remove(), 5000);
+        }
+
+    } catch (e) {
+        console.error("Erro ao restaurar:", e);
+    }
+}
+
+// Limpa o temp após envio com sucesso
+function limparEstadoTemp() {
+    localStorage.removeItem('participa_df_temp_v2');
+}
+
+// Listeners para Autosave em todos os inputs
+document.addEventListener('DOMContentLoaded', () => {
+    restaurarEstadoTemp(); // Tenta restaurar ao abrir
+
+    const inputs = document.querySelectorAll('.form-input');
+    inputs.forEach(inp => {
+        inp.addEventListener('input', salvarEstadoTemp);
+        inp.addEventListener('blur', salvarEstadoTemp);
+    });
+});
+
+
 // === MÁSCARAS DE INPUT (CPF e TEL) ===
 function mascaraCPF(i) {
     var v = i.value;
@@ -165,6 +245,9 @@ function resetarFormulario() {
     btnEnviar.innerText = "REGISTRAR PROTOCOLO";
     btnEnviar.style.background = "#4CAF50";
     if (gravandoAudio) pararGravacao(false);
+
+    // Limpa o autosave pois o processo finalizou (ou foi cancelado intencionalmente)
+    limparEstadoTemp();
 }
 
 // === MÍDIA ===
@@ -179,12 +262,14 @@ function selecionarOrigem(usarCamera) {
 
 function midiaSelecionada(input, tipoIcone) {
     if (input.files[0]) {
-        if (input.files[0].size > 10 * 1024 * 1024) {
-            alert("⚠️ Arquivo > 10MB."); return;
+        // Aumentado limite para 50MB (especialmente para videos)
+        if (input.files[0].size > 50 * 1024 * 1024) {
+            alert("⚠️ Arquivo muito grande (Máximo 50MB)."); return;
         }
         listaAnexos.push({ nome: input.files[0].name, tipo: tipoIcone });
         renderizarListaAnexos();
         input.value = '';
+        salvarEstadoTemp(); // Salva também ao anexar
     }
 }
 
@@ -349,11 +434,11 @@ function abrirAreaGestor() {
     const modal = document.getElementById('modal-gestor');
     const login = document.getElementById('login-form');
     const painel = document.getElementById('painel-gestor');
-    
+
     modal.classList.remove('hidden');
     modal.style.visibility = 'visible';
     modal.style.opacity = '1';
-    
+
     // Reset
     login.style.display = 'block';
     painel.style.display = 'none';
