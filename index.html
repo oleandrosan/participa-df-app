@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Participa DF - Ouvidoria</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00C853">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
+
+<body>
+
+    <header class="app-header">
+        <div class="logo-area">
+            <span class="material-icons-round">account_balance</span>
+            <h1>Participa DF</h1>
+        </div>
+        <button class="icon-btn"><span class="material-icons-round">notifications</span></button>
+    </header>
+
+    <main class="app-content">
+
+        <div class="welcome-card">
+            <h2>Olá, Cidadão! 👋</h2>
+            <p>Sua voz constrói uma cidade melhor.</p>
+        </div>
+
+        <div style="padding: 0 20px;">
+            <button class="action-card" onclick="openModal()"
+                style="width: 100%; height: 100px; background: white; flex-direction: row; font-size: 1.1rem;">
+                <div class="icon-box txt" style="background: #E8F5E9; color: #2E7D32;">
+                    <span class="material-icons-round">add_circle</span>
+                </div>
+                <span>REGISTRAR MANIFESTAÇÃO</span>
+            </button>
+        </div>
+
+        <div class="recent-section">
+            <h3 style="margin-bottom: 15px;">Meus Protocolos Recentes</h3>
+            <div id="historico-lista">
+                <div class="empty-state" style="text-align:center; padding:20px; color:#999;">
+                    <span class="material-icons-round"
+                        style="font-size:48px; display:block; margin:0 auto 10px; opacity:0.5;">history</span>
+                    Nenhum protocolo registrado ainda.
+                </div>
+            </div>
+        </div>
+
+        <footer style="margin-top: 30px; padding: 20px; text-align: center; opacity: 0.6;">
+            <button onclick="abrirAreaGestor()"
+                style="background:none; border:none; color: #666; font-size: 0.8rem; text-decoration: underline;">
+                Área Restrita (Servidor Público)
+            </button>
+        </footer>
+
+    </main>
+
+    <!-- Modal REGISTRO COMPLETO -->
+    <div id="modal-registro" class="modal-overlay hidden">
+        <div class="modal-content" style="height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3 id="modal-title">Nova Manifestação</h3>
+                <button class="close-btn" onclick="closeModal()"><span
+                        class="material-icons-round">close</span></button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- SEÇÃO 1: CIDADÃO -->
+                <div class="section-title"><span class="material-icons-round">person</span> 1. QUEM SOU EU</div>
+                <div class="form-grid">
+                    <input type="text" id="input-nome" placeholder="Nome Completo *" class="form-input"
+                        style="grid-column:span 2;">
+
+                    <!-- AJUSTE DE LAYOUT: CPF + TELEFONE (Flexbox) -->
+                    <div style="grid-column: span 2; display: flex; gap: 10px;">
+                        <input type="tel" id="input-cpf" placeholder="CPF (000.000...)" class="form-input"
+                            oninput="mascaraCPF(this)" maxlength="14" style="flex: 1; min-width: 140px;">
+                        <input type="tel" id="input-tel" placeholder="WhatsApp (61)... *" class="form-input"
+                            oninput="mascaraTel(this)" maxlength="15" style="flex: 1.5;">
+                    </div>
+
+                    <input type="email" id="input-email" placeholder="E-mail" class="form-input"
+                        style="grid-column: span 2;">
+
+                    <!-- Endereço Residencial (CEP) -->
+                    <div style="grid-column:span 2; display:flex; gap:10px;">
+                        <input type="tel" id="input-cep-res" placeholder="CEP (Só números)" class="form-input"
+                            maxlength="8" onblur="buscarCepResidencial(this.value)" style="width: 140px;">
+                        <input type="text" id="input-end-res" placeholder="Endereço (Rua, Bairro...)" class="form-input"
+                            style="flex:1; background:#fafafa;" readonly>
+                    </div>
+                    <input type="text" id="input-num-res" placeholder="Número / Complemento" class="form-input"
+                        style="grid-column:span 2;">
+                </div>
+
+                <!-- SEÇÃO 2: OCORRÊNCIA -->
+                <div class="section-title"><span class="material-icons-round">warning</span> 2. O QUE ACONTECEU</div>
+                <div class="form-grid">
+                    <input type="text" id="input-titulo" placeholder="Título da Ocorrência *" class="form-input"
+                        style="grid-column: span 2;">
+
+                    <!-- Local da Ocorrência -->
+                    <label style="grid-column:span 2; font-size:0.85rem; color:#666; margin-top:5px;">Onde Ocorreu o
+                        Problema?</label>
+                    <input type="text" id="input-end-ocorrencia" placeholder="Endereço do local (Rua, Ponto de Ref.)"
+                        class="form-input" style="grid-column:span 2;">
+
+                    <button onclick="usarGPS()" class="btn-gps" style="grid-column:span 2;">
+                        <span class="material-icons-round">my_location</span> Usar Minha Localização Atual (GPS)
+                    </button>
+                    <span id="gps-status"
+                        style="grid-column:span 2; font-size:0.8rem; color:#666; text-align:center; display:none;"></span>
+
+                    <textarea id="texto-relato" placeholder="Descrição detalhada do problema... *" class="form-input"
+                        style="grid-column: span 2; height: 100px;"></textarea>
+                </div>
+
+                <!-- SEÇÃO 3: EVIDÊNCIAS -->
+                <div class="section-title"><span class="material-icons-round">attach_file</span> 3. EVIDÊNCIAS</div>
+
+                <div style="display: flex; gap: 10px; justify-content: space-between;">
+                    <button class="media-btn" onclick="abrirSeletor('Imagem')">
+                        <span class="material-icons-round" style="color:#E53E3E;">image</span> <span>Foto/Câmera</span>
+                    </button>
+                    <button id="btn-audio" class="media-btn" onclick="toggleGravacao()">
+                        <span id="icon-audio" class="material-icons-round" style="color:#3182CE;">mic</span> <span
+                            id="txt-audio">Áudio</span>
+                    </button>
+                    <button class="media-btn" onclick="abrirSeletor('Video')">
+                        <span class="material-icons-round" style="color:#D69E2E;">videocam</span> <span>Vídeo</span>
+                    </button>
+                </div>
+
+                <div id="lista-anexos" style="margin-top:15px; display:none;"></div>
+
+            </div>
+
+            <button class="submit-btn" onclick="enviarRelato()">REGISTRAR PROTOCOLO</button>
+            <div style="height: 60px;"></div>
+        </div>
+    </div>
+
+    <!-- Modal REGISTRO removed modal-origem -->
+
+    <!-- Modal GESTOR (ÁREA ADMINISTRATIVA) -->
+    <div id="modal-gestor" class="modal-overlay hidden"
+        style="z-index: 500; background: rgba(0,0,0,0.8); align-items: center; justify-content: center;">
+        <div class="modal-content"
+            style="max-width: 350px; padding: 30px; border-radius: 12px; margin: 20px; width: auto; animation: none;">
+            <div style="text-align:center;">
+                <span class="material-icons-round"
+                    style="font-size: 48px; color: #4A5568; margin-bottom: 20px;">admin_panel_settings</span>
+                <h3 style="margin: 0 0 20px 0; color: #2D3748;">Área do Auditor</h3>
+
+                <div id="login-form">
+                    <p style="font-size: 0.9rem; color: #718096; margin-bottom: 15px;">Acesso restrito a servidores
+                        autorizados.</p>
+                    <input type="password" id="input-senha-gestor" placeholder="Senha de Acesso" class="form-input"
+                        style="text-align:center; margin-bottom: 15px;">
+                    <button onclick="verificarSenhaGestor()" class="btn-primary"
+                        style="width:100%; height:45px; background: #2D3748; color: white; border: none; border-radius: 8px; font-weight: 600;">Entrar</button>
+                    <p style="margin-top:10px; font-size: 0.75rem; color: #A0AEC0;">(Senha Demo: admin)</p>
+                </div>
+
+                <div id="painel-gestor" style="display:none; text-align:left;">
+                    <div class="kpi-box"
+                        style="background:#EDF2F7; padding:15px; border-radius:8px; margin-bottom:15px; text-align:center;">
+                        <span id="total-registros" style="font-size:24px; font-weight:bold; color:#2D3748;">0</span>
+                        <div style="font-size:0.8rem; color:#718096;">Protocolos Registrados</div>
+                    </div>
+
+                    <button onclick="exportarCSV()" class="btn-export"
+                        style="width:100%; display:flex; justify-content:center; align-items:center; gap:10px; padding:15px; background:#48BB78; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
+                        <span class="material-icons-round">download</span> Baixar Base de Dados (CSV)
+                    </button>
+                    <!-- Mais ações administrativas aqui futuramente -->
+                </div>
+
+                <button onclick="fecharModalGestor()"
+                    style="margin-top: 20px; background:none; border:none; color: #E53E3E; font-size: 0.9rem; text-decoration: underline;">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inputs Escondidos -->
+    <input type="file" accept="image/*" id="cameraInput" style="display:none"
+        onchange="midiaSelecionada(this, '📸 Foto')">
+    <input type="file" accept="video/*" id="videoInput" style="display:none"
+        onchange="midiaSelecionada(this, '📹 Vídeo')">
+
+    <!-- Nav -->
+    <nav class="bottom-nav">
+        <button class="nav-item active"><span class="material-icons-round">home</span><span>Início</span></button>
+        <button class="nav-item"><span class="material-icons-round">history</span><span>Histórico</span></button>
+    </nav>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
